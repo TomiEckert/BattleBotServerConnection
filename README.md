@@ -127,12 +127,14 @@ void ProcessServer(String serverMessage) {
  - This is possible if you remove every other method call from the **loop** method, with a _switch/if_ statement.
  
 #### Example
-_The loop checks if we only need the manual control first, then ignores the rest of the code._
+_We get the current game mode first, then the loop checks if we only need the manual control first, then ignores the rest of the code._
 
  ```javascript
 boolean manualControl = true; // we want manual control
 
 void loop() {
+  String gameMode = getGameMode();
+
   if(manualControl) {
     ProcessServer(GetServerMessage());
     delay(25);
