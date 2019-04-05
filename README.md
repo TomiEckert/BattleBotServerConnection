@@ -24,8 +24,8 @@ Paste this to the top of the file:
 ```java
 #include <SoftwareSerial.h> // Importing the SoftwareSerial library
 
-#define RxD A0 // Get receiving pin
-#define TxD A1 // Get transmitting pin
+#define RxD A0 // === IMPORTANT === Change this to Receiving pin
+#define TxD A1 // === IMPORTANT === Change this to Transmitting pin
 
 #define m_RL 2 // === IMPORTANT === Change this to motor BACK  LEFT
 #define m_FL 3 // === IMPORTANT === Change this to motor FRONT LEFT
@@ -51,6 +51,10 @@ pinMode(m_FR, OUTPUT);
 #### Loop
 Paste this into the **loop** method:
 ```javascript
+// Gets the Game Mode into the gameMode variable
+String gameMode = getGameMode();
+
+
 String serverMessage = GetServerMessage(); // Gets the message from the server
 ProcessServer(serverMessage); // Parses the message and sets the motors to the correct speed
 
@@ -61,6 +65,23 @@ ProcessServer(GetServerMessage());
 #### Bottom
 Paste this to the bottom of the code:
 ```javascript
+String getGameMode() {
+  // game modes:
+  // 0    None
+  // 1    Obstacle race
+  // 2    Follow the line
+  // 3    Waypoints
+  // 4    Sumo
+  // 5    Football
+  if(serial.available() > 1) {
+    String serverMessage = ""; // Creates variable for serverMessage
+    serverMessage.concat((char)serial.read()); // Reads the character
+    if(serverMessage.length() == 1) { // Checks if message is only one character
+      return serverMessage; // returns serverMessage
+    }
+  }
+}
+
 String GetServerMessage() {
   String serverMessage = ""; // Creates variable for serverMessage
   while (serial.available() > 0) { // Reads while the server is sending stuff
@@ -101,7 +122,8 @@ void ProcessServer(String serverMessage) {
 }
 ```
 # Important
- - The delay must be 50 or less. (ms)
+ - For the manual control the delay must be 50 or less. (ms)
+ - The **_getGameMode_** method must have a delay less than 500. (ms)
  - This is possible if you remove every other method call from the **loop** method, with a _switch/if_ statement.
  
 #### Example
