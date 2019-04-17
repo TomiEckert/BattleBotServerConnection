@@ -8,7 +8,6 @@
     -  [Loop](#Loop)
     -  [Bottom](#Bottom)
  - [Important](#Important)
- - [Example](#Example)
 
 ### Basics
 Paster the following codes to the corresponding parts of your code. Change the necessary settings. Read through the comments to understand what it does.
