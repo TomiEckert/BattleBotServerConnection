@@ -47,9 +47,6 @@ void setup() {
   pinMode(m_RR, OUTPUT);
   pinMode(m_FR, OUTPUT);
 
-  // set up led for feedback
-  pinMode(13, OUTPUT);
-
   // your code goes here
 }
 ```
@@ -90,11 +87,6 @@ int GetServerMessage() {
   }
   if(serverMessage.indexOf(':') > -1)
     serialFlush();
-  if(serverMessage.length() == 9) {
-    digitalWrite(13, HIGH);
-    delay(20);
-    digitalWrite(13, LOW);
-  }
 
   return ProcessServer(serverMessage);
 }
