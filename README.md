@@ -22,7 +22,7 @@ Paster the following codes to the corresponding parts of your code. Change the n
 #### Top
 Paste this to the top of the file:
 ```java
-#include <SoftwareSerial.h> // Importing the SoftwareSerial library
+#include <SoftwareSerial.h>
 
 #define RxD A0 // === IMPORTANT === Change this to Receiving pin
 #define TxD A1 // === IMPORTANT === Change this to Transmitting pin
@@ -32,83 +32,97 @@ Paste this to the top of the file:
 #define m_RR 4 // === IMPORTANT === Change this to motor BACK  RIGHT
 #define m_FR 9 // === IMPORTANT === Change this to motor FRONT RIGHT
 
-SoftwareSerial serial = SoftwareSerial(RxD,TxD); // Setting up software serial (bluetooth service)
+SoftwareSerial serial = SoftwareSerial(RxD,TxD); // sets up bluetooth communication
 ```
 ---
 #### Setup
 Paste this into the **setup** method:
 ```javascript
-serial.begin(38400); // Starting software serial
+void setup() {
+  // starts bluetooth communication
+  serial.begin(38400);
+  
+  // set up motors
+  pinMode(m_RL, OUTPUT);
+  pinMode(m_FL, OUTPUT);
+  pinMode(m_RR, OUTPUT);
+  pinMode(m_FR, OUTPUT);
 
-// set up motors
-pinMode(m_RL, OUTPUT);
-pinMode(m_FL, OUTPUT);
-pinMode(m_RR, OUTPUT);
-pinMode(m_FR, OUTPUT);
+  // set up led for feedback
+  pinMode(13, OUTPUT);
+
+  // your code goes here
+}
 ```
 > **Note:** it doesn't matter if you have an already set up motor scheme. It won't conflict.
 ---
 #### Loop
 Paste this into the **loop** method:
 ```javascript
-// Gets the Game Mode into the gameMode variable
-String gameMode = getGameMode();
+void loop() {
+  int gameMode = GetServerMessage();
+  if(gameMode == 3 || gameMode == 4 || gameMode == 5){
+    delay(50);
+    return;
+  }
 
+  // your code goes here
+  // the variable 'gameMode' has the current game mode.
 
-String serverMessage = GetServerMessage(); // Gets the message from the server
-ProcessServer(serverMessage); // Parses the message and sets the motors to the correct speed
-
-// This is the same as the two lines above, just shorter
-ProcessServer(GetServerMessage());
+  // Available game modes:
+  // 0    None
+  // 1    Obstacle race
+  // 2    Follow the line
+  // 3    Waypoints     -       manual
+  // 4    Sumo          -       manual
+  // 5    Football      -       manual
+}
 ```
 ---
 #### Bottom
 Paste this to the bottom of the code:
 ```javascript
-String getGameMode() {
-  // game modes:
-  // 0    None
-  // 1    Obstacle race
-  // 2    Follow the line
-  // 3    Waypoints
-  // 4    Sumo
-  // 5    Football
-  if(serial.available() > 1) {
-    String serverMessage = ""; // Creates variable for serverMessage
-    serverMessage.concat((char)serial.read()); // Reads the character
-    if(serverMessage.length() == 1) { // Checks if message is only one character
-      return serverMessage; // returns serverMessage
-    }
+int GetServerMessage() {
+  if(serial.available() < 9)
+    return -1;
+  String serverMessage = "";
+  for (int i = 0; i < 9; i++) {
+    serverMessage.concat((char)serial.read());
   }
+  if(serverMessage.indexOf(':') > -1)
+    serialFlush();
+  if(serverMessage.length() == 9) {
+    digitalWrite(13, HIGH);
+    delay(20);
+    digitalWrite(13, LOW);
+  }
+
+  return ProcessServer(serverMessage);
 }
 
-String GetServerMessage() {
-  String serverMessage = ""; // Creates variable for serverMessage
-  while (serial.available() > 0) { // Reads while the server is sending stuff
-    serverMessage.concat((char)serial.read()); // Gets a character from the server
-  }
-  
-  if(serverMessage != ""){ // Checks if there was a serverMessage received
-    if (serverMessage.length() == 8){ // Checks if the serverMessage was 8 characters long
-      if(serverMessage == "00000000") // Checks if it's "00000000", it came to a stop
-        serial.write("stop"); // Sends "stop" signal to server
-      else
-        serial.write("move"); // Sends "move" signal to the server
-    }
-  }
-
-  return serverMessage; // Returns the serverMessage
-}
-
-void ProcessServer(String serverMessage) {
-  // Parsing logic: example: 12512500
-  //   125           125           0             0
-  // FrontLeft | FrontRight | ReverseLeft | ReverseRight
-  
+int ProcessServer(String serverMessage) {
+  if (serverMessage == "")
+    return -1;
   int FL = serverMessage.substring(0, 3).toInt();
   int FR = serverMessage.substring(3, 6).toInt();
   int RL = serverMessage.substring(6, 7).toInt();
-  int RR = serverMessage.substring(7).toInt();
+  int RR = serverMessage.substring(7, 8).toInt();
+  int gameMode = serverMessage.substring(8).toInt();
+
+  Serial.print("Front left: ");
+  Serial.println(FL);
+  Serial.print("Front right: ");
+  Serial.println(FR);
+  Serial.print("Rear left: ");
+  Serial.println(RL);
+  Serial.print("Rear right: ");
+  Serial.println(RR);
+  Serial.print("gameMode: ");
+  Serial.println(gameMode);
+  if(gameMode != 4 && gameMode != 5) {
+    return gameMode;
+  }
+  
   analogWrite(m_FL, FL);
   analogWrite(m_FR, FR);
   if(RL != 0)
@@ -119,35 +133,17 @@ void ProcessServer(String serverMessage) {
     digitalWrite(m_RR, HIGH);
   else
     digitalWrite(m_RR, LOW);
+  return gameMode;
 }
+
+void serialFlush(){
+  while(serial.available() > 0) {
+    serial.read();
+  }
+} 
 ```
 # Important
- - For the manual control the delay must be 50 or less. (ms)
- - The **_getGameMode_** method must have a delay less than 500. (ms)
- - This is possible if you remove every other method call from the **loop** method, with a _switch/if_ statement.
+ - For the manual control the delay in the loop must be 50 or less. (ms)
+ - Use a _switch/if_ statement to check which game mode you need, and run the appropriate methods for it.
  
-#### Example
-_We get the current game mode first, then the loop checks if we only need the manual control first, then ignores the rest of the code._
-
- ```javascript
-boolean manualControl = true; // we want manual control
-
-void loop() {
-  String gameMode = getGameMode();
-
-  if(manualControl) {
-    ProcessServer(GetServerMessage());
-    delay(25);
-    return;
-  }
-
-  // These are here to demostrate your code :)
-  GetSensor();          // Fake code
-  AvoidObject();        // Fake code
-  BlackStripeWhere();   // Fake code
-  FollowWaypoint();     // Fake code
-  Fly();                // Fake code
-  delay(325);           // Long bad delay
-}
- ```
  [Got to the top](#Arduino)
