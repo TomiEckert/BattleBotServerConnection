@@ -55,8 +55,11 @@ void setup() {
 #### Loop
 Paste this into the **loop** method:
 ```javascript
+int gameMode = 0;
 void loop() {
-  int gameMode = GetServerMessage();
+  int temp = GetServerMessage();
+  if(temp != -1)
+    gameMode = temp;
   if(gameMode == 3 || gameMode == 4 || gameMode == 5){
     delay(50);
     return;
@@ -92,7 +95,7 @@ int GetServerMessage() {
 }
 
 int ProcessServer(String serverMessage) {
-  if (serverMessage == "")
+  if (serverMessage.legth() != 9)
     return -1;
   int FL = serverMessage.substring(0, 3).toInt();
   int FR = serverMessage.substring(3, 6).toInt();
