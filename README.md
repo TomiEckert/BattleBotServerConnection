@@ -108,16 +108,6 @@ int ProcessServer(String serverMessage) {
   int RR = serverMessage.substring(7, 8).toInt();
   int gameMode = serverMessage.substring(8).toInt();
 
-  Serial.print("Front left: ");
-  Serial.println(FL);
-  Serial.print("Front right: ");
-  Serial.println(FR);
-  Serial.print("Rear left: ");
-  Serial.println(RL);
-  Serial.print("Rear right: ");
-  Serial.println(RR);
-  Serial.print("gameMode: ");
-  Serial.println(gameMode);
   if(gameMode != 4 && gameMode != 5) {
     return gameMode;
   }
