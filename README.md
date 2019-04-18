@@ -95,7 +95,7 @@ int GetServerMessage() {
 }
 
 int ProcessServer(String serverMessage) {
-  if (serverMessage.legth() != 9)
+  if (serverMessage.length() != 9)
     return -1;
   int FL = serverMessage.substring(0, 3).toInt();
   int FR = serverMessage.substring(3, 6).toInt();
