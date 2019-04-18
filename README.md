@@ -103,7 +103,7 @@ int ProcessServer(String serverMessage) {
   int RR = serverMessage.substring(7, 8).toInt();
   int gameMode = serverMessage.substring(8).toInt();
 
-  if(gameMode != 4 && gameMode != 5) {
+  if(gameMode != 3 && gameMode != 4 && gameMode != 5) {
     return gameMode;
   }
   
